@@ -83,8 +83,11 @@ class App {
 
         this.textureLoader = new THREE.TextureLoader()
         let texture = this.textureLoader.load(this.bulletinImg.src)
+        texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
         let geometry = new THREE.PlaneGeometry(7, 5, .01)
         let material = new THREE.MeshPhongMaterial( {map: texture} )
+        // material.map.magFilter = THREE.LinearFilter
+
         let plane = new THREE.Mesh(geometry, material)
 
         // 2d => 3d

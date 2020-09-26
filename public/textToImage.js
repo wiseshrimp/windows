@@ -17,10 +17,10 @@ let getLines =  (ctx, text, maxWidth) => {
     return lines
 }
 
-let canvas = document.getElementById('canvas')
+let canvas = document.getElementById('textToImage')
 
 
-let textConfig = (fontSize = 30) =>{
+let textConfig = (fontSize = 20) =>{
   let width  = canvas.width
   let height = canvas.height
   let fontSpace = fontSize + 10
