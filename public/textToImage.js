@@ -48,7 +48,6 @@ let textToImage = text => {
     let margin =  0
 
     let textArr = getLines(ctx,text, textSettings.width * 0.75    )
-    console.log(textArr.length)
 
     if( textArr.length >= 6 ){
         textSettings = textConfig(30);

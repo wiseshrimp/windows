@@ -31,13 +31,15 @@ class App {
 
         document.getElementById('bulletin').addEventListener('submit', ev => {
             let message = document.getElementById('bulletinText').value
-            document.getElementById('bulletinText').value = ''
+            document.getElementById('bulletinText').value = '' // Clear bulletin input
+
             // Save message to image
             ev.preventDefault()
-            let img = textToImage(message)
+            let img = textToImage(message) // textToImage.js
             this.bulletinMsg = message
             document.getElementById('bulletinImg').src = img.src
             this.bulletinImg = img
+
             this.clientX = null
             this.clientY = null
             document.addEventListener('mousemove', this.onMouseMove)
@@ -100,11 +102,11 @@ class App {
         texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
         let geometry = new THREE.PlaneGeometry(7, 5, .01)
         let material = new THREE.MeshPhongMaterial( {map: texture} )
-        // material.map.magFilter = THREE.LinearFilter
+        // material.map.magFilter = THREE.LinearFilter // To do: Filter to make text clearer
 
         let plane = new THREE.Mesh(geometry, material)
 
-        // 2d => 3d
+        // 2d => 3d coords
         var mouse = new THREE.Vector3()
         let pos = new THREE.Vector3()
         mouse.set(
@@ -120,6 +122,7 @@ class App {
         plane.position.set(pos.x, pos.y, -10)
         this.scene.add(plane)
         
+        // Send message & coordinates
         this.socket.emit('message', {
             position: [pos.x, pos.y, -10],
             message: this.bulletinMsg
@@ -145,7 +148,6 @@ class App {
     onWindowResize = ev => {
         this.camera.aspect = window.innerWidth / window.innerHeight
         this.camera.updateProjectionMatrix()
-    
         this.renderer.setSize( window.innerWidth, window.innerHeight )
     }
 
@@ -185,7 +187,6 @@ class App {
 
         this.setupCamera()
         this.setupLighting()
-
         this.render()
     }
 
