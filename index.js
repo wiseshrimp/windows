@@ -20,6 +20,12 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
       console.log('user disconnected')
   })
+  socket.on('mousemove', (data, id) => {
+    socket.broadcast.emit('mousemove', {
+      id: socket.id, 
+      pos: data.pos
+    })
+  })
   socket.on('message', function(msg){
       console.log(msg) // {position: [x, y, z], message: ''}
 

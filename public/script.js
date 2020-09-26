@@ -12,6 +12,7 @@ TO DO:
 
 class App {
     constructor() {
+        this.dots = []
         this.setupSockets()
         this.setupScene()
         this.loadObjects()
@@ -27,6 +28,7 @@ class App {
             document.getElementById('main').style.display = 'none'
             this.canvasEl.style.display = 'block'
             document.getElementById('bulletin').style.display = 'block'
+            document.getElementById('canvas').addEventListener('mousemove', this.moveDot)
         })
 
         document.getElementById('bulletin').addEventListener('submit', ev => {
@@ -87,6 +89,61 @@ class App {
                 console.log(err)
             }
         )
+    }
+
+    moveDot = ev => {
+        var mouse = new THREE.Vector3()
+        let pos = new THREE.Vector3()
+        mouse.set(
+            ( ev.clientX / window.innerWidth ) * 2 - 1,
+            - ( ev.clientY / window.innerHeight ) * 2 + 1,
+            -0.5
+        )
+        mouse.unproject(this.camera)
+        mouse.sub(this.camera.position).normalize()
+        let targetZ = -10
+        let distance = ( targetZ - this.camera.position.z ) / mouse.z
+        pos.copy(this.camera.position ).add(mouse.multiplyScalar( distance ) )
+        this.dot = pos
+
+        this.socket.emit('mousemove', {pos})
+
+        // if (!this.dot) {
+        //     this.dot = pos
+        //     this.socket.emit('mousemove', {pos})
+            
+        //     // let geometry = new THREE.SphereGeometry(.2, .2, .2)
+        //     // let color = new THREE.Color(0xffffff)
+        //     // color.setHex(Math.random() * 0xffffff)
+        //     // let material = new THREE.MeshBasicMaterial({color})
+        //     // this.dot = new THREE.Mesh(geometry, material)
+        //     // this.dot.position.set(pos.x, pos.y, -10)
+        //     // this.scene.add(this.dot)
+        // } else {
+        //     this.dot = pos
+        //     // this.dot.position.set(pos.x, pos.y, -10)
+        // }
+    }
+
+    onDotSocket = data => {
+        let didx = this.dots.findIndex(el => el.id === data.id)
+        if (didx === -1) {
+            let geometry = new THREE.SphereGeometry(.2, .2, .2)
+            let color = new THREE.Color(0xffffff)
+            color.setHex(Math.random() * 0xffffff)
+            let material = new THREE.MeshBasicMaterial({color})
+            let mesh = new THREE.Mesh(geometry, material)
+            mesh.position.set(data.pos.x, data.pos.y, -10)
+            this.scene.add(mesh)
+            this.dots.push({
+                pos: data.pos,
+                id: data.id,
+                mesh
+            })
+        } else {
+            this.dots[didx].mesh.position.set(data.pos.x, data.pos.y, -10)
+            this.dots[didx].pos = data.pos
+        }
     }
 
     onMouseDown = ev => {
@@ -192,6 +249,8 @@ class App {
 
     setupSockets = () => {
         this.socket = io()
+
+        this.socket.on('mousemove', this.onDotSocket)
     }
     
     render = time => {        
