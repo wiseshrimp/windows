@@ -1,3 +1,15 @@
+/*
+
+TO DO:
+- Connect db
+- Setup controls
+- Add image uploader to s3 & format image to be correct window ratio before saving
+- Make wall/window look nice
+- Fix text? Looks very blurry
+
+*/
+
+
 class App {
     constructor() {
         this.setupSockets()
@@ -31,6 +43,8 @@ class App {
             document.addEventListener('mousemove', this.onMouseMove)
             document.addEventListener('mousedown', this.onMouseDown)
         })
+
+        window.addEventListener('resize', this.onWindowResize)
     }
     
     addWall = () => {
@@ -126,6 +140,13 @@ class App {
             document.getElementById('bulletinImg').style.transform = `translate(${ev.clientX - this.clientX}px, ${ev.clientY - this.clientY}px)`
         }
 
+    }
+
+    onWindowResize = ev => {
+        this.camera.aspect = window.innerWidth / window.innerHeight
+        this.camera.updateProjectionMatrix()
+    
+        this.renderer.setSize( window.innerWidth, window.innerHeight )
     }
 
     setupCamera = () => {
