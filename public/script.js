@@ -4,6 +4,17 @@ class App {
         this.setupScene()
         this.loadObjects()
         this.addWindowImage()
+        this.addWall()
+
+        this.addEventListeners()
+    }
+
+    addEventListeners = () => {
+        document.getElementById('loadThree').addEventListener('click', ev => {
+            document.getElementById('clouds').style.display = 'none'
+            document.getElementById('main').style.display = 'none'
+            this.canvasEl.style.display = 'block'
+        })
     }
 
     addTestCube = () => {
@@ -12,15 +23,24 @@ class App {
         let cube = new THREE.Mesh( geometry, material )
         this.scene.add(cube)
     }
+    
+    addWall = () => {
+        let geometry = new THREE.PlaneGeometry(100, 30, 0.1)
+        let material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
+        let wall = new THREE.Mesh(geometry, material)
+        wall.position.set(0, 0, -11)
+        this.scene.add(wall)
+        
+    }
 
     addWindowImage = () => {
         this.textureLoader = new THREE.TextureLoader()
         let texture = this.textureLoader.load('test.png')
-        let geometry = new THREE.PlaneGeometry(1, 1, 1)
-        let material = new THREE.MeshBasicMaterial( {map: texture} )
+        let geometry = new THREE.PlaneGeometry(4, 7, .01)
+        let material = new THREE.MeshPhongMaterial( {map: texture} )
         let plane = new THREE.Mesh(geometry, material)
-        plane.scale.set(4, 7, .01)
-        plane.position.set(0, 4.1, -10)
+        // plane.scale.set(4, 7, .01)
+        plane.position.set(0, 4.2, -10)
         this.scene.add(plane)
     }
 
