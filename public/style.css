@@ -40,3 +40,27 @@ body {
     pointer-events: none;
     z-index: 1;
 }
+
+#bulletin {
+    position: absolute;
+    bottom: 0;
+    width: 90vw;
+    left: 5vw;
+    margin: 10px;
+    z-index: 1;
+    display: none;
+}
+
+#bulletinText {
+    width: 90%;
+    font-family: monospace;
+}
+
+#bulletinImg {
+    position: absolute;
+    z-index: 2;
+    width: 30%;
+    height: auto;
+    transition: all 0.1s;
+    display: none;
+}

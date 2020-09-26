@@ -10,18 +10,26 @@ class App {
     }
 
     addEventListeners = () => {
-        document.getElementById('loadThree').addEventListener('click', ev => {
+        document.getElementById('loadThree').addEventListener('click', ev => { // Switching to threejs screen
             document.getElementById('clouds').style.display = 'none'
             document.getElementById('main').style.display = 'none'
             this.canvasEl.style.display = 'block'
+            document.getElementById('bulletin').style.display = 'block'
         })
-    }
 
-    addTestCube = () => {
-        let geometry = new THREE.BoxGeometry(1, 1, 1)
-        let material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
-        let cube = new THREE.Mesh( geometry, material )
-        this.scene.add(cube)
+        document.getElementById('bulletin').addEventListener('submit', ev => {
+            let message = document.getElementById('bulletinText').value
+            // Save message to image
+            ev.preventDefault()
+            let img = textToImage(message)
+            document.getElementById('bulletinImg').src = img.src
+            document.getElementById('bulletinImg').style.display = 'block'
+            this.bulletinImg = img
+            this.clientX = null
+            this.clientY = null
+            document.addEventListener('mousemove', this.onMouseMove)
+            document.addEventListener('mousedown', this.onMouseDown)
+        })
     }
     
     addWall = () => {
@@ -39,7 +47,6 @@ class App {
         let geometry = new THREE.PlaneGeometry(4, 7, .01)
         let material = new THREE.MeshPhongMaterial( {map: texture} )
         let plane = new THREE.Mesh(geometry, material)
-        // plane.scale.set(4, 7, .01)
         plane.position.set(0, 4.2, -10)
         this.scene.add(plane)
     }
@@ -49,7 +56,7 @@ class App {
         this.objectLoader.load(
             './Window.obj',
             obj => {
-                var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
+                var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ) // To change to wood material
                 this.objectLoader.setMaterials(material)
                 obj.scale.set(.005, .005, .005)
                 obj.position.set(0, 0, -10)
@@ -63,6 +70,51 @@ class App {
                 console.log(err)
             }
         )
+    }
+
+    onMouseDown = ev => {
+        ev.preventDefault()
+        this.clientX = null
+        this.clientY = null
+        document.getElementById('bulletinImg').style.display = 'none'
+        document.removeEventListener('mousemove', this.onMouseMove)
+        document.removeEventListener('mousedown', this.onMouseDown)
+
+        this.textureLoader = new THREE.TextureLoader()
+        let texture = this.textureLoader.load(this.bulletinImg.src)
+        let geometry = new THREE.PlaneGeometry(7, 5, .01)
+        let material = new THREE.MeshPhongMaterial( {map: texture} )
+        let plane = new THREE.Mesh(geometry, material)
+        var mouse = new THREE.Vector3()
+        let pos = new THREE.Vector3()
+        mouse.set(
+            ( ev.clientX / window.innerWidth ) * 2 - 1,
+            - ( ev.clientY / window.innerHeight ) * 2 + 1,
+            -0.5
+        )
+        mouse.unproject(this.camera)
+        mouse.sub(this.camera.position).normalize()
+        let targetZ = -10
+        let distance = ( targetZ - this.camera.position.z ) / mouse.z
+        pos.copy(this.camera.position ).add(mouse.multiplyScalar( distance ) )
+
+        plane.position.set(pos.x, pos.y, -10)
+        this.scene.add(plane)
+        
+    }
+
+    onMouseMove = ev => {
+        ev.preventDefault()
+
+        if (!this.clientX) {
+            document.getElementById('bulletinImg').style.top = `${ev.clientY}px`
+            document.getElementById('bulletinImg').style.left = `${ev.clientX}px`
+            this.clientX = ev.clientX
+            this.clientY = ev.clientY
+        } else {
+            document.getElementById('bulletinImg').style.transform = `translate(${ev.clientX - this.clientX}px, ${ev.clientY - this.clientY}px)`
+        }
+
     }
 
     setupCamera = () => {
@@ -91,9 +143,7 @@ class App {
             alpha: true,
             antialias: true
         })
-        this.renderer.setClearColor(0x010101, 0);
-
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.renderer.shadowMap.enabled = true
         this.raycaster = new THREE.Raycaster()
         this.fov = 75
@@ -103,8 +153,6 @@ class App {
 
         this.setupCamera()
         this.setupLighting()
-
-        // this.addTestCube()
 
         this.render()
     }
