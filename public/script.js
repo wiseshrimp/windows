@@ -2,13 +2,47 @@ class App {
     constructor() {
         this.setupSockets()
         this.setupScene()
+        this.loadObjects()
+        this.addWindowImage()
     }
 
     addTestCube = () => {
         let geometry = new THREE.BoxGeometry(1, 1, 1)
-        var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-        var cube = new THREE.Mesh( geometry, material );
+        let material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
+        let cube = new THREE.Mesh( geometry, material )
         this.scene.add(cube)
+    }
+
+    addWindowImage = () => {
+        this.textureLoader = new THREE.TextureLoader()
+        let texture = this.textureLoader.load('test.png')
+        let geometry = new THREE.PlaneGeometry(1, 1, 1)
+        let material = new THREE.MeshBasicMaterial( {map: texture} )
+        let plane = new THREE.Mesh(geometry, material)
+        plane.scale.set(4, 7, .01)
+        plane.position.set(0, 4.1, -10)
+        this.scene.add(plane)
+    }
+
+    loadObjects = () => {
+        this.objectLoader = new THREE.OBJLoader()
+        this.objectLoader.load(
+            './Window.obj',
+            obj => {
+                var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
+                this.objectLoader.setMaterials(material)
+                obj.scale.set(.005, .005, .005)
+                obj.position.set(0, 0, -10)
+                obj.castShadow = true
+                this.scene.add(obj)
+            },
+            xhr => {
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' )
+              },
+            err => {
+                console.log(err)
+            }
+        )
     }
 
     setupCamera = () => {
@@ -33,8 +67,13 @@ class App {
         this.scene = new THREE.Scene()
         let canvas = this.canvasEl = document.getElementById('canvas')
         this.renderer = new THREE.WebGLRenderer({
-            canvas
+            canvas,
+            alpha: true,
+            antialias: true
         })
+        this.renderer.setClearColor(0x010101, 0);
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true
         this.raycaster = new THREE.Raycaster()
         this.fov = 75
@@ -45,7 +84,7 @@ class App {
         this.setupCamera()
         this.setupLighting()
 
-        this.addTestCube()
+        // this.addTestCube()
 
         this.render()
     }
