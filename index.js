@@ -20,8 +20,10 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
       console.log('user disconnected')
   })
-  socket.on('chat message', function(msg){
-      console.log('message: ' + msg)
+  socket.on('message', function(msg){
+      console.log(msg) // {position: [x, y, z], message: ''}
+
+      // To do: save message to db
   })
 })
   

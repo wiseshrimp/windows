@@ -44,7 +44,7 @@ let textToImage = text => {
     // ctx.fillRect(0, 0, textSettings.width, textSettings.height);
     ctx.textBaseline = 'top';
     ctx.fillStyle = 'black';
-    ctx.font = `${textSettings.fontSize}px Courier`;
+    ctx.font = `${textSettings.fontSize}px bold Courier`;
     let margin =  0
 
     let textArr = getLines(ctx,text, textSettings.width * 0.75    )

@@ -19,11 +19,12 @@ class App {
 
         document.getElementById('bulletin').addEventListener('submit', ev => {
             let message = document.getElementById('bulletinText').value
+            document.getElementById('bulletinText').value = ''
             // Save message to image
             ev.preventDefault()
             let img = textToImage(message)
+            this.bulletinMsg = message
             document.getElementById('bulletinImg').src = img.src
-            document.getElementById('bulletinImg').style.display = 'block'
             this.bulletinImg = img
             this.clientX = null
             this.clientY = null
@@ -85,6 +86,8 @@ class App {
         let geometry = new THREE.PlaneGeometry(7, 5, .01)
         let material = new THREE.MeshPhongMaterial( {map: texture} )
         let plane = new THREE.Mesh(geometry, material)
+
+        // 2d => 3d
         var mouse = new THREE.Vector3()
         let pos = new THREE.Vector3()
         mouse.set(
@@ -97,10 +100,13 @@ class App {
         let targetZ = -10
         let distance = ( targetZ - this.camera.position.z ) / mouse.z
         pos.copy(this.camera.position ).add(mouse.multiplyScalar( distance ) )
-
         plane.position.set(pos.x, pos.y, -10)
         this.scene.add(plane)
         
+        this.socket.emit('message', {
+            position: [pos.x, pos.y, -10],
+            message: this.bulletinMsg
+        })
     }
 
     onMouseMove = ev => {
@@ -111,6 +117,8 @@ class App {
             document.getElementById('bulletinImg').style.left = `${ev.clientX}px`
             this.clientX = ev.clientX
             this.clientY = ev.clientY
+            document.getElementById('bulletinImg').style.display = 'block'
+
         } else {
             document.getElementById('bulletinImg').style.transform = `translate(${ev.clientX - this.clientX}px, ${ev.clientY - this.clientY}px)`
         }
