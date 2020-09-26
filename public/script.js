@@ -199,6 +199,9 @@ class App {
         } else {
             document.getElementById('bulletinImg').style.transform = `translate(${ev.clientX - this.clientX}px, ${ev.clientY - this.clientY}px)`
         }
+    }
+
+    onNewMessage = () => {
 
     }
 
@@ -251,6 +254,7 @@ class App {
         this.socket = io()
 
         this.socket.on('mousemove', this.onDotSocket)
+        this.socket.on('newMessage', this.onNewMessage)
     }
     
     render = time => {        
