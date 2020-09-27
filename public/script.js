@@ -13,10 +13,17 @@ TO DO:
 class App {
     constructor() {
         this.dots = []
+
+        // Window position settings
+        this.windowX = 0
+        this.windowY = 4.2
+        this.windowZ = -10
+        this.windowXOffset = 10
+
         this.setupSockets()
         this.setupScene()
         this.loadObjects()
-        this.addWindowImage()
+        // this.addWindowImage()
         this.addWall()
 
         this.addEventListeners()
@@ -53,21 +60,21 @@ class App {
     
     addWall = () => {
         let geometry = new THREE.PlaneGeometry(100, 30, 0.1)
-        let material = new THREE.MeshBasicMaterial( {color: 0x00ff00} )
+        let material = new THREE.MeshBasicMaterial( {color: 0xd4c5ad} )
         let wall = new THREE.Mesh(geometry, material)
         wall.position.set(0, 0, -11)
         this.scene.add(wall)
-        
     }
 
-    addWindowImage = () => {
-        this.textureLoader = new THREE.TextureLoader()
-        let texture = this.textureLoader.load('test.png')
+    addWindowImage = (image) => {
+        let imageData = 'data:image/jpeg;base64,' + image.content;
+        let texture = THREE.ImageUtils.loadTexture(imageData)
         let geometry = new THREE.PlaneGeometry(4, 7, .01)
         let material = new THREE.MeshPhongMaterial( {map: texture} )
         let plane = new THREE.Mesh(geometry, material)
-        plane.position.set(0, 4.2, -10)
+        plane.position.set(this.windowX, this.windowY, this.windowZ)
         this.scene.add(plane)
+        this.windowX += this.windowXOffset
     }
 
     loadObjects = () => {
@@ -221,6 +228,10 @@ class App {
         this.camera.position.z = 3
     }
 
+    setupControls = () => {
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
+    }
+
     setupLighting = () => {
         let color = 0xFFFFFF
         let intensity = 1
@@ -239,6 +250,7 @@ class App {
         })
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.renderer.shadowMap.enabled = true
+        this.renderer.setClearColor(0xb8c8dc, 1)
         this.raycaster = new THREE.Raycaster()
         this.fov = 75
         this.aspect = 2 // Canvas default
@@ -246,6 +258,7 @@ class App {
         this.far = 100
 
         this.setupCamera()
+        this.setupControls()
         this.setupLighting()
         this.render()
     }
@@ -253,15 +266,21 @@ class App {
     setupSockets = () => {
         this.socket = io()
 
-        this.socket.on('mousemove', this.onDotSocket)
+        // this.socket.on('mousemove', this.onDotSocket)
         this.socket.on('newMessage', this.onNewMessage)
+        this.socket.on('newWindow', this.addWindowImage)
+        this.socket.on('loadWindows', (images) => {
+            for (let image of images) {
+                this.addWindowImage(image)
+            }
+        })
+
     }
     
-    render = time => {        
+    render = () => {        
         this.renderer.render(this.scene, this.camera)
         requestAnimationFrame(this.render)
-      }
-
+    }
 }
 
 let app = new App()

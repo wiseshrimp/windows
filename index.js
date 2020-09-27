@@ -4,83 +4,104 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
+const multer = require('multer')
 
-// Set up express server and socket
-const app = express()
-const http = require('http').createServer(app)
-const io = require('socket.io')(http)
+class Server {
+  constructor() {
+    // Set up express server and socket
+    this.app = express()
+    this.http = require('http').createServer(this.app)
+    this.io = require('socket.io')(this.http)
+  
+    // Set up MongoDB Client
+    const MongoClient = require('mongodb').MongoClient
+    const uri = "mongodb+srv://windows-admin:7foqErRNOpKyc0Mu@cluster0.kbpyb.mongodb.net/windows?retryWrites=true&w=majority"
+    this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  }
 
-// Set upu MongoDB Client
-const MongoClient = require('mongodb').MongoClient
-const uri = "mongodb+srv://windows-admin:7foqErRNOpKyc0Mu@cluster0.kbpyb.mongodb.net/windows?retryWrites=true&w=majority"
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  register = () => {
+    this.app.use(bodyParser.json())
+    this.app.use(bodyParser.urlencoded({ extended: true }))
+    this.app.use(express.static(path.join(__dirname, 'temp')))
+    this.app.use(cors())
+    this.app.get('/', (req, res) => {
+      res.sendFile(__dirname + '/index.html')
+    })
 
-async function uploadImage() {
-  try {
-    await client.connect()
+    let upload = multer({ dest: path.join(__dirname, 'public')})
+    this.app.post('/upload', upload.single('image'), (req, res) => {
+      if (req.file && req.file.mimetype == 'image/jpeg' && req.file.size < 2000000) { // limit size to 2mb for now
+        let image = fs.readFileSync(req.file.path, { encoding: 'base64' })
+        const data = {
+          timestamp: new Date(),
+          content: image,
+          name: req.file.originalname
+        }
+        this.saveToDatabase('images', data)
+      }
+    })
+    
+    this.io.on('connection', (socket) => {
+      console.log('a user connected')
+    
+      this.readDatabaseCollection('images').then((images) => {
+        console.log(images.length)
+        socket.emit('loadWindows', images)
+      })
+    
+      socket.on('disconnect', () => {
+        console.log('user disconnected')
+      })
+    
+      // socket.on('mousemove', (data, id) => {
+      //   socket.broadcast.emit('mousemove', {
+      //     id: socket.id, 
+      //     pos: data.pos
+      //   })
+      // })
+    
+      socket.on('message', (bulletin) => {
+        console.log(bulletin) // {position: [x, y, z], message: ''}
+        this.saveToDatabase('bulletin', bulletin)
+        
+        // Broadcast new message to all other socket clients
+        socket.broadcast.emit('newMessage', bulletin)
+      })
+    })
+  }
 
-    // let image = fs.readFileSync('/Users/katiehan/Downloads/test.jpg', { encoding: 'base64' })
-    // const document = {
-    //   timestamp: new Date(),
-    //   content: image,
-    //   name: 'test.jpg'
-    // }
-    // await client.db('windows').collection('images').insertOne(document)
+  readDatabaseCollection = async (collection) => {
+    let result = []
+    try {
+      let cursor = this.client.db('windows').collection(collection).find({})
+      result = await cursor.toArray()
+    } catch (err) {
+      console.error('ReadDatabaseError: ', err)
+    } finally {
+      return result
+    }
+  }
 
-    let cursor = client.db('windows').collection('images').find({})
-    let result = await cursor.toArray()
-    // console.log(result)
-    fs.writeFileSync(path.join(__dirname, result[0].name), result[0].content, { encoding: 'base64' })
-  } catch (err) {
-    console.error(err)
-  } finally {
-    await client.close()
+  saveToDatabase = async (collection, data) => {
+    try {
+      await this.client.db('windows').collection(collection).insertOne(data)
+    } catch (err) {
+      console.error('SaveDatabaseError: ', err)
+    }
+  }
+
+  run = async () => {
+    try {
+      await this.client.connect()
+      this.register()
+      this.http.listen(3000, function(){
+        console.log('listening on *:3000')
+      })
+    } catch (err) {
+      console.error('Error running server: ', err)
+      await this.client.close()
+    }
   }
 }
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(express.static(path.join(__dirname, 'public')))
-app.use(cors())
-app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html')
-})
-
-io.on('connection', function(socket) {
-  console.log('a user connected')
-
-  socket.on('disconnect', function() {
-      console.log('user disconnected')
-  })
-
-  socket.on('mousemove', (data, id) => {
-    socket.broadcast.emit('mousemove', {
-      id: socket.id, 
-      pos: data.pos
-    })
-  })
-
-  socket.on('message', function(bulletin) {
-    console.log(bulletin) // {position: [x, y, z], message: ''}
-    saveToDatabase('bulletin', bulletin)
-    
-    // Broadcast new message to all other socket clients
-    socket.broadcast.emit('newMessage', bulletin)
-  })
-
-})
-  
-http.listen(3000, function(){
-  console.log('listening on *:3000')
-})
-
-async function saveToDatabase(collection, data) {
-      try {
-        await client.connect()
-        await client.db('windows').collection(collection).insertOne(data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        await client.close()
-      }
-}
+(new Server()).run()
