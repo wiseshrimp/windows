@@ -16,8 +16,8 @@ class App {
 
         // Window position settings
         this.windowX = 0
-        this.windowY = 4.2
-        this.windowZ = -10
+        this.windowY = 4.1
+        this.windowZ = -11
         this.windowXOffset = 10
 
         this.setupSockets()
@@ -67,6 +67,7 @@ class App {
     }
 
     addWindowImage = (image) => {
+        console.log(image)
         let imageData = 'data:image/jpeg;base64,' + image.content;
         let texture = THREE.ImageUtils.loadTexture(imageData)
         let geometry = new THREE.PlaneGeometry(4, 7, .01)
@@ -74,6 +75,9 @@ class App {
         let plane = new THREE.Mesh(geometry, material)
         plane.position.set(this.windowX, this.windowY, this.windowZ)
         this.scene.add(plane)
+        let clone = this.window[0].clone()
+        clone.position.set(this.windowX, 0, -11)
+        this.scene.add(clone)
         this.windowX += this.windowXOffset
     }
 
@@ -87,7 +91,7 @@ class App {
                 obj.scale.set(.005, .005, .005)
                 obj.position.set(0, 0, -10)
                 obj.castShadow = true
-                this.scene.add(obj)
+                this.window = [obj, material]
             },
             xhr => {
                 console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' )
@@ -114,22 +118,6 @@ class App {
         this.dot = pos
 
         this.socket.emit('mousemove', {pos})
-
-        // if (!this.dot) {
-        //     this.dot = pos
-        //     this.socket.emit('mousemove', {pos})
-            
-        //     // let geometry = new THREE.SphereGeometry(.2, .2, .2)
-        //     // let color = new THREE.Color(0xffffff)
-        //     // color.setHex(Math.random() * 0xffffff)
-        //     // let material = new THREE.MeshBasicMaterial({color})
-        //     // this.dot = new THREE.Mesh(geometry, material)
-        //     // this.dot.position.set(pos.x, pos.y, -10)
-        //     // this.scene.add(this.dot)
-        // } else {
-        //     this.dot = pos
-        //     // this.dot.position.set(pos.x, pos.y, -10)
-        // }
     }
 
     onDotSocket = data => {
@@ -230,6 +218,8 @@ class App {
 
     setupControls = () => {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
+        this.controls.enableKeys = true
+        this.controls.update()
     }
 
     setupLighting = () => {
@@ -266,7 +256,7 @@ class App {
     setupSockets = () => {
         this.socket = io()
 
-        // this.socket.on('mousemove', this.onDotSocket)
+        this.socket.on('mousemove', this.onDotSocket)
         this.socket.on('newMessage', this.onNewMessage)
         this.socket.on('newWindow', this.addWindowImage)
         this.socket.on('loadWindows', (images) => {

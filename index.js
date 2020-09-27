@@ -1,10 +1,10 @@
-
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
+require('dotenv').config()
 
 class Server {
   constructor() {
@@ -53,12 +53,12 @@ class Server {
         console.log('user disconnected')
       })
     
-      // socket.on('mousemove', (data, id) => {
-      //   socket.broadcast.emit('mousemove', {
-      //     id: socket.id, 
-      //     pos: data.pos
-      //   })
-      // })
+      socket.on('mousemove', (data) => {
+        socket.broadcast.emit('mousemove', {
+          id: socket.id, 
+          pos: data.pos
+        })
+      })
     
       socket.on('message', (bulletin) => {
         console.log(bulletin) // {position: [x, y, z], message: ''}
