@@ -15,7 +15,7 @@ class Server {
   
     // Set up MongoDB Client
     const MongoClient = require('mongodb').MongoClient
-    const uri = "mongodb+srv://windows-admin:7foqErRNOpKyc0Mu@cluster0.kbpyb.mongodb.net/windows?retryWrites=true&w=majority"
+    const uri = process.env.MONGO_URI
     this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
   }
 
