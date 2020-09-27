@@ -22,13 +22,13 @@ class Server {
   register = () => {
     this.app.use(bodyParser.json())
     this.app.use(bodyParser.urlencoded({ extended: true }))
-    this.app.use(express.static(path.join(__dirname, 'temp')))
+    this.app.use(express.static(path.join(__dirname, 'public')))
     this.app.use(cors())
     this.app.get('/', (req, res) => {
       res.sendFile(__dirname + '/index.html')
     })
 
-    let upload = multer({ dest: path.join(__dirname, 'public')})
+    let upload = multer({ dest: path.join(__dirname, 'temp')})
     this.app.post('/upload', upload.single('image'), (req, res) => {
       if (req.file && req.file.mimetype == 'image/jpeg' && req.file.size < 2000000) { // limit size to 2mb for now
         let image = fs.readFileSync(req.file.path, { encoding: 'base64' })
