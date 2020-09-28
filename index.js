@@ -24,13 +24,10 @@ class Server {
     this.app.use(bodyParser.urlencoded({ extended: true }))
     this.app.use(express.static(path.join(__dirname, 'public')))
     this.app.use(cors())
-    this.app.get('/', (req, res) => {
-      res.sendFile(__dirname + '/index.html')
-    })
 
     let upload = multer({ dest: path.join(__dirname, 'temp')})
     this.app.post('/upload', upload.single('image'), (req, res) => {
-      if (req.file && req.file.mimetype == 'image/jpeg' && req.file.size < 2000000) { // limit size to 2mb for now
+      if (req.file && req.file.mimetype == 'image/jpeg' && req.file.size < 5000000) { // limit size to 5mb for now
         let image = fs.readFileSync(req.file.path, { encoding: 'base64' })
         const data = {
           timestamp: new Date(),
@@ -38,6 +35,8 @@ class Server {
           name: req.file.originalname
         }
         this.saveToDatabase('images', data)
+
+        this.io.sockets.emit("newWindow", data)
       }
     })
     
@@ -45,7 +44,6 @@ class Server {
       console.log('a user connected')
     
       this.readDatabaseCollection('images').then((images) => {
-        console.log(images.length)
         socket.emit('loadWindows', images)
       })
     

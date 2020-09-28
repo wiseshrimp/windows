@@ -8,7 +8,8 @@
   </head>
   <body>
     <div id="main">
-        <form method="post" action="/upload" enctype="multipart/form-data">
+      <p>Take a picture of the view outside your window and upload below. (Currently only supports JPG/JPEG files under 5MB!)</p>
+        <form id="uploadForm" onsubmit="return false">
           <input type="file" id="image" name="image" accept="image/jpeg">
           <input type="submit" id="loadThree" value="Enter">
         </form>

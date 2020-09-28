@@ -38,6 +38,14 @@ class App {
             document.getElementById('canvas').addEventListener('mousemove', this.moveDot)
         })
 
+        document.getElementById('uploadForm').addEventListener('submit', ev => {
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/upload", true); 
+            xhttp.onreadystatechange = () => {};
+            let formData = new FormData(document.getElementById('uploadForm'))
+            xhttp.send(formData);
+        })
+
         document.getElementById('bulletin').addEventListener('submit', ev => {
             let message = document.getElementById('bulletinText').value
             document.getElementById('bulletinText').value = '' // Clear bulletin input
@@ -59,10 +67,16 @@ class App {
     }
     
     addWall = () => {
-        let geometry = new THREE.PlaneGeometry(100, 30, 0.1)
-        let material = new THREE.MeshBasicMaterial( {color: 0xd4c5ad} )
+        let geometry = new THREE.PlaneGeometry(500, 25, 0.1)
+
+        let texture = new THREE.TextureLoader().load('tex4.jpg')
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.offset.set( 0, 0 );
+        texture.repeat.set( 6, 2 );
+
+        let material = new THREE.MeshBasicMaterial( {map: texture} )
         let wall = new THREE.Mesh(geometry, material)
-        wall.position.set(0, 0, -11)
+        wall.position.set(0, 2, -11)
         this.scene.add(wall)
     }
 
@@ -260,6 +274,7 @@ class App {
         this.socket.on('newMessage', this.onNewMessage)
         this.socket.on('newWindow', this.addWindowImage)
         this.socket.on('loadWindows', (images) => {
+            this.windowX = (images.length / 2) * -10
             for (let image of images) {
                 this.addWindowImage(image)
             }
